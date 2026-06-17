@@ -1,0 +1,241 @@
+---
+title: "Análise de Tempo de Tela e Estresse com Aprendizagem de Máquina"
+author: "João Inácio Scrimini"
+date: today
+lang: pt
+format:
+  pdf:
+    toc: false
+    number-sections: true
+    indent: true
+    geometry:
+      - top=2.3cm
+      - bottom=2.3cm
+      - left=2.5cm
+      - right=2.5cm
+    cite-method: natbib
+editor_options:
+  chunk_output_type: console
+  markdown: 
+    wrap: sentence
+bibliography: ref.bib
+---
+
+# Introdução
+\vspace{-0.4cm}
+
+\hspace{1.25cm} O presente trabalho investiga a relação entre o tempo de uso de tela e indicadores de bem-estar psicológico, com o objetivo de analisar padrões e possíveis associações entre hábitos digitais e níveis de estresse. O aumento do uso de dispositivos digitais e o tempo de exposição a telas têm sido amplamente discutidos na literatura por sua possível associação com níveis elevados de estresse, ansiedade e impactos negativos no bem-estar psicológico, especialmente em jovens adultos, nos quais o uso de smartphones e redes sociais tende a ser mais intensivo e constante [@pera2020psychology].
+
+Para isso, foi utilizada uma abordagem de Aprendizagem de Máquina Supervisionada, aplicada a um problema de regressão, no qual a variável resposta representa o nível de estresse em escala de 0 a 10. O conjunto de dados utilizado foi obtido na plataforma Kaggle [@kumaresan2025screentime], disponível em: [https://www.kaggle.com/datasets/adharshinikumar/screentime-vs-mentalwellness-survey-2025](https://www.kaggle.com/datasets/adharshinikumar/screentime-vs-mentalwellness-survey-2025). O banco de dados é composto por respostas de uma pesquisa com 400 participantes, relacionando hábitos de uso de dispositivos digitais com indicadores de saúde mental e estilo de vida, incluindo variáveis como tempo de tela, sono, atividade física e interação social.
+
+Para a construção dos modelos, foram utilizadas as seguintes variáveis: nível de estresse (Nv_estresse, variável resposta), idade, sexo, tempo de tela em horas (Tempo_tela_h), horas de sono (Horas_dormidas), minutos de atividade física por semana (Exerc_semanal_min) e horas de interação social por semana (Social_semanal_h). A variável sexo foi derivada da variável gênero, mantendo apenas as categorias masculino e feminino. O conjunto final utilizado na modelagem contém 392 observações.
+
+A partir desse conjunto de dados, foram aplicados métodos de regressão supervisionada, incluindo Regressão Linear, Árvore de Decisão para Regressão e Random Forest. O objetivo é comparar o desempenho desses modelos na predição do nível de estresse com base nas variáveis explicativas, avaliando sua capacidade de generalização por meio de métricas apropriadas de erro e ajuste.
+
+# Fundamentos Teóricos e Metodológicos
+\vspace{-0.4cm}
+
+\hspace{1.25cm} A Aprendizagem de Máquina Supervisionada consiste em um conjunto de técnicas nas quais um modelo aprende a relação entre uma matriz de covariáveis (X), cujas linhas representam as observações e as colunas as variáveis explicativas, e uma variável resposta (y), a partir de dados rotulados. O objetivo é estimar uma função $f(X)$ tal que $\hat{y} = f(X)$, minimizando o erro entre previsões e valores reais. Neste trabalho, o problema é tratado como uma tarefa de regressão supervisionada, na qual a variável resposta é contínua. Foram utilizados três métodos principais: Regressão Linear, Árvore de Decisão para Regressão e Random Forest, além de métricas de avaliação de desempenho.
+
+## Regressão Linear
+\vspace{-0.4cm}
+
+\hspace{1.25cm} A Regressão Linear assume uma relação linear entre as variáveis explicativas e a variável resposta [@montgomery2021introduction]. O modelo é definido por uma combinação linear das variáveis de entrada, conforme a expressão:
+$$
+\hat{y} = \beta_0 + \beta_1 x_1 + \beta_2 x_2 + \dots + \beta_p x_p,
+$$
+em que $\hat{y}$ representa o valor predito da variável resposta.
+
+Os parâmetros $\beta$ são estimados minimizando a soma dos erros quadráticos:
+$\min_{\beta} \sum_{i=1}^{n} (y_i - \hat{y}_i)^2,$
+em que $n$ é o número de observações do conjunto de dados.
+
+Esse método busca a melhor aproximação linear dos dados, sendo interpretável e eficiente, mas limitado para relações não lineares.
+
+## Árvore de Decisão para Regressão
+\vspace{-0.4cm}
+
+\hspace{1.25cm} A Árvore de Decisão para Regressão é um método não paramétrico que particiona o espaço das variáveis explicativas em regiões disjuntas e homogêneas [@breiman2017classification]. Em cada particionamento, o algoritmo busca a divisão que minimiza a variabilidade dos valores da variável resposta dentro dos subconjuntos resultantes.
+
+A predição em uma região $R$ (subconjunto do espaço de dados correspondente a uma folha da árvore) é dada pela média dos valores observados:
+$$
+\hat{y} = \frac{1}{|R|} \sum_{i \in R} y_i.
+$$
+
+O objetivo do particionamento é minimizar o erro quadrático médio dentro das regiões. Esse método permite capturar relações não lineares e interações entre variáveis, embora seja suscetível ao sobreajuste (overfitting). O crescimento da árvore é controlado por restrições estruturais que evitam esse problema, como profundidade máxima, número mínimo de observações para realização de uma divisão e número mínimo de observações em cada folha. Tais parâmetros regulam a complexidade do modelo e impactam diretamente sua capacidade de generalização.
+
+## Random Forest para Regressão
+\vspace{-0.4cm}
+
+\hspace{1.25cm} O Random Forest é um método ensemble baseado na combinação de múltiplas árvores de decisão treinadas a partir de amostras bootstrap dos dados e de subconjuntos aleatórios das variáveis explicativas [@breiman2001random]. A previsão final do modelo é obtida pela média das previsões individuais de cada árvore:
+$$
+\hat{y} = \frac{1}{T} \sum_{t=1}^{T} \hat{y}_t,
+$$
+em que $T$ é o número de árvores no ensemble. A aleatoriedade reduz a variância do modelo e melhora sua capacidade de generalização, tornando-o mais robusto do que uma única árvore. O desempenho do modelo depende do número de árvores no ensemble, da profundidade das árvores individuais e da quantidade de variáveis consideradas em cada divisão, fatores que controlam o equilíbrio entre viés e variância.
+
+## Métricas de Avaliação
+\vspace{-0.4cm}
+
+\hspace{1.25cm} Para avaliar o desempenho dos modelos, foram utilizadas as métricas raíz do erro quadrático médio (RMSE) e coeficiente de determinação $R^2$. O RMSE mede o erro médio entre valores reais e preditos, penalizando mais fortemente erros grandes:
+$RMSE = \sqrt{\frac{1}{n} \sum_{i=1}^{n} (y_i - \hat{y}_i)^2}.$
+Valores menores indicam melhor desempenho do modelo. 
+
+Já o coeficiente de determinação $R^2$ mede a proporção da variância explicada pelo modelo:
+$R^2 = (\text{cor}(y, \hat{y}))^2.$
+Valores próximos de 1 indicam bom ajuste, enquanto valores próximos de 0 indicam baixo poder explicativo.
+
+
+# Aplicação
+\vspace{-0.4cm}
+
+\hspace{1.25cm}Nesta seção, são descritos a análise exploratória dos dados e a aplicação dos métodos de aprendizado de máquina utilizados no estudo.
+
+## Análise Exploratória dos Dados
+\vspace{-0.4cm}
+
+\hspace{1.25cm}A @tbl-desc apresenta as estatísticas descritivas das variáveis do estudo. De forma geral, observa-se um nível de estresse elevado na amostra (média de 8.156 em uma escala de 0 a 10), sugerindo alta carga de estresse entre os participantes. O tempo médio de tela é de 9.04 horas diárias, indicando uso intensivo de dispositivos digitais, enquanto o sono médio de 7.02 horas está próximo do recomendado para adultos. As demais variáveis apresentam maior variabilidade, especialmente a atividade física semanal (109.3 ± 70.2 minutos) e as horas de interação social semanal (7.89 ± 4.92 horas), indicando diferenças significativas entre os indivíduos nos hábitos de vida. Observa-se também uma distribuição relativamente equilibrada entre homens (170) e mulheres (222) na amostra.
+
+```{r}
+#| label: tbl-desc
+#| tbl-cap: "Resultados descritivos das variáveis em estudo e teste de normalidade de Shapiro-Wilk (SW) para as variáveis quantitativas."
+#| echo: false
+#| results: asis
+
+cat('
+\\begin{table}[H]
+\\centering
+\\begin{tabular}{lrrrrrrr}
+\\hline
+Variável & Mín & Mediana & Média & Máx & DP & SW($p$-valor) & NA\'s\\\\
+\\hline
+Nv\\_estresse & 0 & 8.8 & 8.156 & 10 & 2.101 & <0.001 & 0\\\\
+Idade & 16 & 30 & 29.587 & 60 & 7.347 & <0.001 & 0\\\\
+Tempo\\_tela\\_h & 1 & 9.13 & 9.04 & 19.17 & 2.455 & 0.191 & 0\\\\
+Horas\\_dormidas & 4.64 & 7.03 & 7.018 & 9.74 & 0.857 & 0.655 & 0\\\\
+Exerc\\_semanal\\_min & 0 & 103 & 109.304 & 372 & 70.201 & <0.001 & 0\\\\
+Social\\_semanal\\_h & 0 & 7.7 & 7.89 & 23.9 & 4.917 & <0.001 & 0\\\\
+\\hline
+Sexo & \\multicolumn{7}{c}{n: \\quad Masculino(0) = 170 \\quad Feminino(1) = 222}\\\\
+\\hline
+\\end{tabular}
+\\end{table}
+')
+```
+
+
+Quanto ao teste de Shapiro-Wilk, observa-se que a maioria das variáveis não segue distribuição normal ($p < 0.05$). Em contrapartida, horas de sono ($p = 0.655$) e tempo de tela ($p = 0.191$) apresentam comportamento aproximadamente normal. Além disso, não foram identificados dados faltantes (NA's) no conjunto analisado.
+
+A matriz de correlação (@fig-gdesc) indica uma associação positiva entre o tempo de tela e o nível de estresse ($r = 0.70$), sugerindo que maiores períodos de uso de telas tendem a estar relacionados a níveis mais elevados de estresse, e uma associação negativa entre estresse e horas de sono ($r = -0.49$), indicando que menores períodos de sono tendem a estar associados a maiores níveis de estresse. As demais variáveis apresentam correlações fracas, tanto com o nível de estresse quanto entre si.
+
+O boxplot por sexo não indica diferenças relevantes no nível de estresse entre os grupos.
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE,warning = FALSE,message = FALSE)
+```
+
+```{r}
+library(ggplot2)
+# library(tidyverse)
+source("func.R")
+
+dados <- read.csv("dados.csv")
+dados <- dados[dados$gender != "Non-binary/Other", ]
+dados$sexo <- ifelse(dados$gender == "Female", 1, 0)
+dados_modelo <- dados |>
+  dplyr::select(
+    stress_level_0_10,
+    age,sexo,
+    screen_time_hours,
+    sleep_hours,
+    exercise_minutes_per_week,
+    social_hours_per_week
+  )
+
+colnames(dados_modelo)<-c("Nv_estresse","Idade","Sexo","Tempo_tela_h","Horas_dormidas","Exerc_semanal_min","Social_semanal_h")
+```
+
+```{r, eval=FALSE}
+table(dados_modelo$Sexo)
+tabela<-medidas_quant(dados_modelo[,-3])[,-2]
+knitr::kable(tabela,format = "latex")
+```
+
+
+```{r,fig.cap="Gráfico de correlação de Pearson entre as variáveis quantitativas e boxplot da variável sexo em relação ao nível de estresse.",fig.height= 3.7,fig.width=10}
+#| label: fig-gdesc
+cor_var<-cor(dados_modelo[,-3],method = "pearson")
+g_cor<-ggcorrplot::ggcorrplot(
+  cor_var,insig = "blank",type = "lower",lab = TRUE,
+  lab_size = 4,tl.cex = 10,
+  colors = c("red3", "white", "green4")
+)+
+  theme(
+    legend.key.width = grid::unit(0.2, "cm"),
+    legend.key.height = grid::unit(1.2, "cm"),
+    legend.text = element_text(size = 7.5),
+    legend.box.margin = margin(0, 0, 0, -12),
+    panel.grid.major.x = element_blank()
+  )
+dados_sexo1<-ifelse(dados_modelo$Sexo==1,"Feminino","Masculino")
+g_box<-graf_box(var_num = dados_modelo$Nv_estresse,var_cat = dados_sexo1,
+         legx = "Sexo", legy = "Nível de Estresse")
+cowplot::plot_grid(g_cor,g_box)
+```
+
+## Aplicação dos métodos
+\vspace{-0.4cm}
+
+\hspace{1.25cm}Após a análise exploratória dos dados, esta subseção apresenta a metodologia empregada na construção, ajuste e avaliação dos modelos de Regressão Linear (OLS), Árvore de Decisão e \textit{Random Forest}, bem como os resultados obtidos por meio de sua aplicação. As análises foram realizadas em ambiente \texttt{R}, utilizando os pacotes da biblioteca \texttt{tidymodels}.
+
+Para avaliar a capacidade de generalização dos modelos e reduzir o risco de sobreajuste, os dados foram divididos em conjuntos de treino (80%) e teste (20%). A fim de garantir a reprodutibilidade dos resultados, utilizou-se a semente aleatória \texttt{set.seed(123)} em todas as etapas. No conjunto de treino, foi empregada validação cruzada \textit{k-fold} com 10 partições para a otimização dos hiperparâmetros e avaliação interna dos modelos. A variável resposta foi o nível de estresse, modelado em função das demais covariáveis. A seleção das configurações finais baseou-se nas métricas RMSE e $R^2$, adotando-se a minimização do RMSE como principal critério de escolha.
+
+Foram considerados três modelos preditivos: Regressão Linear (OLS), Árvore de Decisão e \textit{Random Forest}. A Regressão Linear foi utilizada como modelo de referência. Para a Árvore de Decisão, realizou-se a otimização da complexidade de custo ($10^{-4}$ a $10^{-1}$), da profundidade máxima da árvore (2 a 8) e do número mínimo de observações para divisão dos nós (2 a 30). No caso do \textit{Random Forest}, foram ajustados o número de preditores selecionados em cada divisão (1 a 6), o número mínimo de observações por nó (2 a 30) e a quantidade de árvores da floresta (100 a 500). A busca pelos hiperparâmetros foi conduzida por meio de uma grade regular com quatro níveis para cada parâmetro. Com base no menor RMSE obtido durante a validação cruzada, foram selecionadas, para a Árvore de Decisão, uma profundidade máxima de 4 níveis, complexidade de custo igual a $10^{-4}$ e número mínimo de 20 observações para divisão dos nós. Para o \textit{Random Forest}, foram selecionadas 200 árvores, 30 observações mínimas por nó e 6 preditores candidatos em cada divisão.
+
+A @fig-PREV apresenta a relação entre os valores observados e preditos para os três modelos. A Árvore de Decisão apresentou o melhor desempenho preditivo, com $RMSE = 1.302$ e $R^2 = 0.627$, superando a Regressão Linear ($RMSE = 1.360$, $R^2 = 0.604$) e o \textit{Random Forest} ($RMSE = 1.363$, $R^2 = 0.605$). Observa-se, contudo, um padrão comum aos três métodos. Para indivíduos com menores níveis de estresse, as predições tendem a ser superiores aos valores observados, enquanto para aqueles com maiores níveis ocorre o comportamento inverso, com predominância de subestimações. As regiões destacadas na @fig-PREV evidenciam esse padrão, indicando uma tendência dos modelos em produzir estimativas mais próximas da média da distribuição. Em contrapartida, esse comportamento é menos evidente para níveis de estresse entre 8 e 9 pontos, aproximadamente, faixa na qual se observa maior proximidade entre os valores observados e preditos. Entre os modelos avaliados, a Árvore de Decisão mostrou-se mais eficaz em reduzir esse efeito, especialmente nos extremos da variável resposta, onde os erros de predição foram visivelmente menores.
+
+
+```{r,fig.height= 4,fig.width=10, fig.cap="Desempenho preditivo dos modelos com base nos valores observados e preditos.", fig.pos="h"}
+#| label: fig-PREV
+# Modelo gerado em "models.R", devido a processo computacional apenas as informações serão utilizadas (salvas em .RData)
+load("inf/G_prev.RData")
+cowplot::plot_grid(G_OLS,G_DT,G_RF,cols = 3,
+  labels = c("(a) Modelo OLS", "(b) Árvore de Decisão", "(c) Random Forest"),
+  label_x = 0.55, label_y = 0.035, hjust = 0.5, vjust = 1,       
+  label_size = 11,label_fontface = "bold.italic")
+```
+
+
+```{r,fig.height= 3.6,fig.width=10, fig.cap="Importância das covariáveis nos modelos avaliados.", fig.pos="h"}
+# Modelo gerado em "models.R", devido a processo computacional apenas as informações serão utilizadas (salvas em .RData)
+#| label: fig-inf
+load("inf/G_inf.RData")
+cowplot::plot_grid(G_inf_OLS,G_inf_DT,G_inf_RF,ncol = 3,
+  labels = c("(a) Modelo OLS", "(b) Árvore de Decisão", "(c) Random Forest"),
+  label_x = 0.55, label_y = 0.04, hjust = 0.5, vjust = 1,       
+  label_size = 11,label_fontface = "bold.italic")
+```
+
+
+
+A @fig-inf apresenta os coeficientes estimados pela Regressão Linear e as medidas de importância das variáveis para a Árvore de Decisão e o \textit{Random Forest}. No modelo linear, apenas horas de sono e tempo de tela apresentaram associação estatisticamente significativa com o nível de estresse ($p < 0.001$). As estimativas indicam uma redução média de 0.658 unidades no nível de estresse para cada hora adicional de sono e um aumento médio de 0.511 unidades para cada hora adicional de tempo de tela, confirmando as tendências observadas na análise exploratória. Nos modelos baseados em árvores, observou-se um padrão consistente com os resultados da Regressão Linear. Tempo de tela e horas de sono foram as variáveis de maior relevância preditiva, com destaque para o tempo de tela, que apresentou importância superior à das demais covariáveis. Em contraste, as demais variáveis contribuíram de forma marginal para as predições, apresentando medidas de importância próximas de zero.
+
+
+
+Considerando seu melhor desempenho preditivo, a estrutura final da Árvore de Decisão é apresentada na @fig-arvore. As divisões observadas ao longo da árvore refletem a influência das variáveis identificadas como mais relevantes na etapa anterior, permitindo visualizar como diferentes combinações de tempo de tela e horas de sono contribuem para a discriminação dos níveis de estresse. Observa-se que os maiores índices de estresse são encontrados em indivíduos com mais de 8.5 horas de tempo de tela e menos de 7.8 horas de sono, apresentando níveis de estresse superiores a 8.6.
+
+
+\vspace{-0.4cm}
+```{r, fig.cap="Estrutura da Árvore de Decisão com melhor desempenho preditivo.", fig.pos="h"}
+# Modelo gerado em "models.R", devido a processo computacional apenas as informações serão utilizadas (salvas em .RData)
+#| label: fig-arvore
+knitr::include_graphics("inf/arvore.PDF")
+```
+
+\vspace{-0.4cm}
+# Conclusão
+\vspace{-0.4cm}
+
+\hspace{1.25cm} Os resultados indicaram que o tempo de tela e as horas de sono foram as variáveis mais relevantes para a predição do nível de estresse, resultado consistente entre os diferentes métodos de modelagem empregados. Entre os modelos avaliados, a Árvore de Decisão apresentou o melhor desempenho preditivo, alcançando o menor RMSE e o maior $R^2$. Embora todos os modelos tenham apresentado tendência à superestimação de níveis mais baixos de estresse e à subestimação de níveis mais elevados, esse comportamento foi menos pronunciado na Árvore de Decisão. De modo geral, os resultados ressaltam a importância dos hábitos de sono e do tempo de exposição às telas, indicando que menos horas dormidas e maior tempo de tela estão associados a níveis mais elevados de estresse na população analisada.
+
+
+
